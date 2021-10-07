@@ -509,6 +509,7 @@ exports.ActivityTypes = createEnum(['PLAYING', 'STREAMING', 'LISTENING', 'WATCHI
  * * `GUILD_PRIVATE_THREAD` - a guild text channel's private thread channel
  * * `GUILD_STAGE_VOICE` - a guild stage voice channel
  * * `UNKNOWN` - a generic channel of unknown type, could be Channel or GuildChannel
+ * * `GUILD_DIRECTORY` - a channel in a Student Hub containing the listed servers
  * @typedef {string} ChannelType
  * @see {@link https://discord.com/developers/docs/resources/channel#channel-object-channel-types}
  */
@@ -526,6 +527,7 @@ exports.ChannelTypes = createEnum([
   'GUILD_PUBLIC_THREAD',
   'GUILD_PRIVATE_THREAD',
   'GUILD_STAGE_VOICE',
+  'GUILD_DIRECTORY',
 ]);
 
 /**
