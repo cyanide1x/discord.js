@@ -4643,6 +4643,7 @@ export type GuildFeatures =
   | 'DISCOVERABLE'
   | 'FEATURABLE'
   | 'HUB'
+  | 'HAS_DIRECTORY_ENTRY'
   | 'INVITE_SPLASH'
   | 'MEMBER_VERIFICATION_GATE_ENABLED'
   | 'NEWS'
