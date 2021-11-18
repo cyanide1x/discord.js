@@ -8,8 +8,8 @@ const Permissions = require('../util/Permissions');
 
 /**
  * @typedef {Object} ClientApplicationInstallParams
- * @property {string[]} scopes The scopes to add the application to the server with
- * @property {Permissions} permissions The permissions to give this bot upon joining
+ * @property {InviteScope[]} scopes The scopes to add the application to the server with
+ * @property {Readonly<Permissions>} permissions The permissions this bot will request upon joining
  */
 
 /**

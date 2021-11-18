@@ -589,11 +589,6 @@ export class Client<Ready extends boolean = boolean> extends BaseClient {
   public removeAllListeners<S extends string | symbol>(event?: Exclude<S, keyof ClientEvents>): this;
 }
 
-export interface ClientApplicationInstallParams {
-  scopes: InviteScope[];
-  permissions: Readonly<Permissions>;
-}
-
 export class ClientApplication extends Application {
   private constructor(client: Client, data: RawClientApplicationData);
   public botPublic: boolean | null;
