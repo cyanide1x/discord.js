@@ -6,6 +6,12 @@ const ApplicationCommandManager = require('../managers/ApplicationCommandManager
 const ApplicationFlags = require('../util/ApplicationFlags');
 
 /**
+ * @typedef {Object} ClientApplicationInstallParams
+ * @property {string} scopes The scopes to add the application to the server with
+ * @property {string} permissions The permissions to request for the bot role
+ */
+
+/**
  * Represents a Client OAuth2 Application.
  * @extends {Application}
  */
@@ -22,6 +28,30 @@ class ClientApplication extends Application {
 
   _patch(data) {
     super._patch(data);
+
+    if ('tags' in data) {
+      /**
+       * The tags this application has
+       * @type {?string[]}
+       */
+      this.tags = data.tags;
+    }
+
+    if ('install_params' in data) {
+      /**
+       * Settings for this application's default in-app authorization
+       * @type {?ClientApplicationInstallParams}
+       */
+      this.installParams = data.install_params;
+    }
+
+    if ('custom_install_url' in data) {
+      /**
+       * This applications custom installation URL
+       * @type {?string}
+       */
+      this.customInstallURL = data.custom_install_url;
+    }
 
     if ('flags' in data) {
       /**

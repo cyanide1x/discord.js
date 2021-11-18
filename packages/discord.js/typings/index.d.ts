@@ -589,6 +589,11 @@ export class Client<Ready extends boolean = boolean> extends BaseClient {
   public removeAllListeners<S extends string | symbol>(event?: Exclude<S, keyof ClientEvents>): this;
 }
 
+export interface ClientApplicationInstallParams {
+  scopes: string;
+  permissions: string;
+}
+
 export class ClientApplication extends Application {
   private constructor(client: Client, data: RawClientApplicationData);
   public botPublic: boolean | null;
@@ -596,6 +601,9 @@ export class ClientApplication extends Application {
   public commands: ApplicationCommandManager;
   public cover: string | null;
   public flags: Readonly<ApplicationFlags>;
+  public tags?: [string, string?, string?, string?, string?];
+  public installParams?: ClientApplicationInstallParams;
+  public customInstallURL?: string;
   public owner: User | Team | null;
   public readonly partial: boolean;
   public rpcOrigins: string[];
