@@ -8,8 +8,8 @@ const Permissions = require('../util/Permissions');
 
 /**
  * @typedef {Object} ClientApplicationInstallParams
- * @property {string[]} scopes The scopes to add the application to the server with
- * @property {Permissions} permissions The permissions to request for the bot role
+ * @property {InviteScope[]} scopes The scopes to add the application to the server with
+ * @property {Readonly<Permissions>} permissions The permissions to request for the bot role
  */
 
 /**
@@ -44,8 +44,8 @@ class ClientApplication extends Application {
        * @type {?ClientApplicationInstallParams}
        */
       this.installParams = {
-        ...data.install_params,
-        permissions: new Permissions(data.install_params.permissions),
+        scopes: data.install_params.scopes,
+        permissions: new Permissions(data.install_params.permissions).freeze(),
       };
     }
 
