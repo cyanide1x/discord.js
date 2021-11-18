@@ -8,8 +8,8 @@ const Permissions = require('../util/Permissions');
 
 /**
  * @typedef {Object} ClientApplicationInstallParams
- * @property {InviteScope[]} scopes The scopes to add the application to the server with
- * @property {Readonly<Permissions>} permissions The permissions to request for the bot role
+ * @property {string[]} scopes The scopes to add the application to the server with
+ * @property {Permissions} permissions The permissions to give this bot upon joining
  */
 
 /**
@@ -32,7 +32,7 @@ class ClientApplication extends Application {
 
     if ('tags' in data) {
       /**
-       * The tags this application has
+       * The tags this application has (max of 5)
        * @type {?string[]}
        */
       this.tags = data.tags;
