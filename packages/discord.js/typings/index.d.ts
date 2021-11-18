@@ -590,7 +590,7 @@ export class Client<Ready extends boolean = boolean> extends BaseClient {
 }
 
 export interface ClientApplicationInstallParams {
-  scopes: string;
+  scopes: string[];
   permissions: string;
 }
 

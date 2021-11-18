@@ -7,7 +7,7 @@ const ApplicationFlags = require('../util/ApplicationFlags');
 
 /**
  * @typedef {Object} ClientApplicationInstallParams
- * @property {string} scopes The scopes to add the application to the server with
+ * @property {string[]} scopes The scopes to add the application to the server with
  * @property {string} permissions The permissions to request for the bot role
  */
 
@@ -47,7 +47,7 @@ class ClientApplication extends Application {
 
     if ('custom_install_url' in data) {
       /**
-       * This applications custom installation URL
+       * This application's custom installation URL
        * @type {?string}
        */
       this.customInstallURL = data.custom_install_url;
