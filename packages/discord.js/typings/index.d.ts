@@ -591,7 +591,7 @@ export class Client<Ready extends boolean = boolean> extends BaseClient {
 
 export interface ClientApplicationInstallParams {
   scopes: string[];
-  permissions: string;
+  permissions: Permissions;
 }
 
 export class ClientApplication extends Application {

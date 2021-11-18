@@ -4,11 +4,12 @@ const Team = require('./Team');
 const Application = require('./interfaces/Application');
 const ApplicationCommandManager = require('../managers/ApplicationCommandManager');
 const ApplicationFlags = require('../util/ApplicationFlags');
+const Permissions = require('../util/Permissions');
 
 /**
  * @typedef {Object} ClientApplicationInstallParams
  * @property {string[]} scopes The scopes to add the application to the server with
- * @property {string} permissions The permissions to request for the bot role
+ * @property {Permissions} permissions The permissions to request for the bot role
  */
 
 /**
@@ -42,7 +43,10 @@ class ClientApplication extends Application {
        * Settings for this application's default in-app authorization
        * @type {?ClientApplicationInstallParams}
        */
-      this.installParams = data.install_params;
+      this.installParams = {
+        ...data.install_params,
+        permissions: new Permissions(data.install_params.permissions),
+      };
     }
 
     if ('custom_install_url' in data) {
