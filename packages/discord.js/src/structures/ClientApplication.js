@@ -35,7 +35,7 @@ class ClientApplication extends Application {
        * The tags this application has (max of 5)
        * @type {?string[]}
        */
-      this.tags = data.tags;
+      this.tags = data.tags ?? [];
     }
 
     if ('install_params' in data) {
