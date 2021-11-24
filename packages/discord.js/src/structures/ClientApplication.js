@@ -33,7 +33,7 @@ class ClientApplication extends Application {
     if ('tags' in data) {
       /**
        * The tags this application has (max of 5)
-       * @type {?string[]}
+       * @type {string[]}
        */
       this.tags = data.tags ?? [];
     }
