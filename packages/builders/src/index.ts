@@ -7,6 +7,7 @@ export * from './components/ActionRow';
 export * from './components/Button';
 export * from './components/Component';
 export * from './components/Components';
+export * from './components/TextInput';
 export * from './components/selectMenu/SelectMenu';
 export * from './components/selectMenu/SelectMenuOption';
 

@@ -2,17 +2,21 @@ import { APIActionRowComponent, ComponentType } from 'discord-api-types/v9';
 import type { ButtonComponent, SelectMenuComponent } from '..';
 import type { Component } from './Component';
 import { createComponent } from './Components';
+import type { InputTextComponent } from './TextInput';
 
 export type MessageComponent = ActionRowComponent | ActionRow;
 
 export type ActionRowComponent = ButtonComponent | SelectMenuComponent;
+export type ModalActionRowComponent = InputTextComponent;
 
 // TODO: Add valid form component types
 
 /**
  * Represents an action row component
  */
-export class ActionRow<T extends ActionRowComponent = ActionRowComponent> implements Component {
+export class ActionRow<T extends ActionRowComponent | ModalActionRowComponent = ActionRowComponent>
+	implements Component
+{
 	public readonly components: T[] = [];
 	public readonly type = ComponentType.ActionRow;
 
@@ -42,6 +46,8 @@ export class ActionRow<T extends ActionRowComponent = ActionRowComponent> implem
 	public toJSON(): APIActionRowComponent {
 		return {
 			...this,
+			// @ts-expect-error
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 			components: this.components.map((component) => component.toJSON()),
 		};
 	}
