@@ -2,7 +2,7 @@ import { APIActionRowComponent, ComponentType } from 'discord-api-types/v9';
 import type { ButtonComponent, SelectMenuComponent } from '..';
 import type { Component } from './Component';
 import { createComponent } from './Components';
-import type { InputTextComponent } from './TextInput';
+import type { InputTextComponent } from './InputText';
 
 export type MessageComponent = ActionRowComponent | ActionRow;
 
