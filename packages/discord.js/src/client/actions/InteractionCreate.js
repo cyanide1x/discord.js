@@ -6,6 +6,7 @@ const AutocompleteInteraction = require('../../structures/AutocompleteInteractio
 const ButtonInteraction = require('../../structures/ButtonInteraction');
 const ChatInputCommandInteraction = require('../../structures/ChatInputCommandInteraction');
 const MessageContextMenuCommandInteraction = require('../../structures/MessageContextMenuCommandInteraction');
+const ModalSubmitInteraction = require('../../structures/ModalSubmitInteraction');
 const SelectMenuInteraction = require('../../structures/SelectMenuInteraction');
 const UserContextMenuCommandInteraction = require('../../structures/UserContextMenuCommandInteraction');
 const { Events } = require('../../util/Constants');
@@ -56,6 +57,9 @@ class InteractionCreateAction extends Action {
         break;
       case InteractionType.ApplicationCommandAutocomplete:
         InteractionClass = AutocompleteInteraction;
+        break;
+      case 5:
+        InteractionClass = ModalSubmitInteraction;
         break;
       default:
         client.emit(Events.DEBUG, `[INTERACTION] Received interaction with unknown type: ${data.type}`);
