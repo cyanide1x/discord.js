@@ -4,7 +4,7 @@ import { DiscordSnowflake } from '@sapphire/snowflake';
 import { EventEmitter } from 'node:events';
 import { Agent as httpsAgent } from 'node:https';
 import { Agent as httpAgent } from 'node:http';
-import type { RequestInit, BodyInit } from 'node-fetch';
+import type { RequestInit, BodyInit } from 'undici';
 import type { IHandler } from './handlers/IHandler';
 import { SequentialHandler } from './handlers/SequentialHandler';
 import type { RESTOptions, RestEvents } from './REST';
@@ -398,9 +398,8 @@ export class RequestManager extends EventEmitter {
 			}
 		}
 
-		const fetchOptions = {
-			agent: this.agent,
-			body: finalBody,
+		const fetchOptions: RequestInit = {
+			body: finalBody as BodyInit,
 			// eslint-disable-next-line @typescript-eslint/consistent-type-assertions
 			headers: { ...(request.headers ?? {}), ...additionalHeaders, ...headers } as Record<string, string>,
 			method: request.method,

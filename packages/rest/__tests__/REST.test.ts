@@ -3,10 +3,72 @@ import { DiscordSnowflake } from '@sapphire/snowflake';
 import { REST, DefaultRestOptions, APIRequest } from '../src';
 import { Routes, Snowflake } from 'discord-api-types/v9';
 import { Response } from 'node-fetch';
+import { MockAgent, setGlobalDispatcher } from 'undici';
 
 const newSnowflake: Snowflake = DiscordSnowflake.generate().toString();
 
+const mockClient = new MockAgent({ connections: 1 });
+
+setGlobalDispatcher(mockClient);
+
+const mockPool = mockClient.get(`${DefaultRestOptions.api}/v${DefaultRestOptions.version}`);
+
 const api = new REST().setToken('A-Very-Fake-Token');
+
+mockPool
+	.intercept({
+		path: '/simpleGet',
+		method: 'POST',
+	})
+	.reply(200, { test: true });
+
+mockPool
+	.intercept({
+		path: '/simpleDelete',
+		method: 'DELETE',
+	})
+	.reply(200, { test: true });
+
+mockPool
+	.intercept({
+		path: '/simplePatch',
+		method: 'PATCH',
+	})
+	.reply(200, { test: true });
+
+mockPool
+	.intercept({
+		path: '/simplePut',
+		method: 'PUT',
+	})
+	.reply(200, { test: true });
+
+mockPool
+	.intercept({
+		path: '/simplePost',
+		method: 'POST',
+	})
+	.reply(200, { test: true });
+
+mockPool
+	.intercept({
+		path: '/getQuery?foo=bar&hello=world',
+		method: 'GET',
+	})
+	.reply(200, { test: true });
+
+mockPool
+	.intercept({
+		path: '/getAuth',
+		method: 'GET',
+		headers: {
+			'x-audit-log-reason': (h) => {
+				console.log(h);
+				return true;
+			},
+		},
+	})
+	.reply(200, {});
 
 nock(`${DefaultRestOptions.api}/v${DefaultRestOptions.version}`)
 	.get('/simpleGet')

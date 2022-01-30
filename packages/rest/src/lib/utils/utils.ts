@@ -1,5 +1,5 @@
 import type { RESTPatchAPIChannelJSONBody } from 'discord-api-types/v9';
-import type { Response } from 'node-fetch';
+import type { Response } from 'undici';
 import { RequestMethod } from '../RequestManager';
 
 /**
@@ -11,7 +11,7 @@ export function parseResponse(res: Response): Promise<unknown> {
 		return res.json();
 	}
 
-	return res.buffer();
+	return res.arrayBuffer();
 }
 
 /**

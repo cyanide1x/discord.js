@@ -1,6 +1,6 @@
 import { setTimeout as sleep } from 'node:timers/promises';
 import { AsyncQueue } from '@sapphire/async-queue';
-import fetch, { RequestInit, Response } from 'node-fetch';
+import { fetch, RequestInit, Response } from 'undici';
 import { DiscordAPIError, DiscordErrorData, OAuthErrorData } from '../errors/DiscordAPIError';
 import { HTTPError } from '../errors/HTTPError';
 import { RateLimitError } from '../errors/RateLimitError';
@@ -305,7 +305,7 @@ export class SequentialHandler {
 			// node-fetch typings are a bit weird, so we have to cast to any to get the correct signature
 			// Type 'AbortSignal' is not assignable to type 'import("discord.js-modules/node_modules/@types/node-fetch/externals").AbortSignal'
 			// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-			res = await fetch(url, { ...options, signal: controller.signal as any });
+			res = await fetch(url, { ...options, signal: controller.signal });
 		} catch (error: unknown) {
 			// Retry the specified number of times for possible timed out requests
 			if (error instanceof Error && error.name === 'AbortError' && retries !== this.manager.options.retries) {

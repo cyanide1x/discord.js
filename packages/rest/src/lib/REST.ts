@@ -3,7 +3,7 @@ import { CDN } from './CDN';
 import { InternalRequest, RequestData, RequestManager, RequestMethod, RouteLike } from './RequestManager';
 import { DefaultRestOptions, RESTEvents } from './utils/constants';
 import type { AgentOptions } from 'node:https';
-import type { RequestInit, Response } from 'node-fetch';
+import type { RequestInit, Response } from 'undici';
 import type { HashData } from './RequestManager';
 import type Collection from '@discordjs/collection';
 import type { IHandler } from './handlers/IHandler';
