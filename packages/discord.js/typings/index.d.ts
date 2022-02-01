@@ -5247,5 +5247,7 @@ export {
   SelectMenuComponent,
   SelectMenuOption,
   ActionRowComponent,
+  Modal,
+  InputTextComponent,
 } from '@discordjs/builders';
 export { DiscordAPIError, HTTPError, RateLimitError } from '@discordjs/rest';
