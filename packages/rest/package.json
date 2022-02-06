@@ -52,11 +52,10 @@
 		"@discordjs/collection": "workspace:^",
 		"@sapphire/async-queue": "^1.2.0",
 		"@sapphire/snowflake": "^3.1.0",
-		"@types/node-fetch": "^2.5.12",
 		"discord-api-types": "^0.26.1",
 		"form-data": "^4.0.0",
 		"tslib": "^2.3.1",
-		"undici": "^4.12.2"
+		"undici": "https://github.com/suneettipirneni/undici"
 	},
 	"devDependencies": {
 		"@babel/core": "^7.17.0",

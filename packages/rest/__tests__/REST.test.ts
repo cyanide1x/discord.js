@@ -1,8 +1,6 @@
-import nock from 'nock';
 import { DiscordSnowflake } from '@sapphire/snowflake';
 import { REST, DefaultRestOptions, APIRequest } from '../src';
 import { Routes, Snowflake } from 'discord-api-types/v9';
-import { Response } from 'node-fetch';
 import { MockAgent, setGlobalDispatcher } from 'undici';
 
 const newSnowflake: Snowflake = DiscordSnowflake.generate().toString();
@@ -68,54 +66,115 @@ mockPool
 			},
 		},
 	})
-	.reply(200, {});
+	.reply(200, ({ headers }) => ({
+		auth: headers.get('authorization') ?? null,
+	}))
+	.times(3);
 
-nock(`${DefaultRestOptions.api}/v${DefaultRestOptions.version}`)
-	.get('/simpleGet')
-	.reply(200, { test: true })
-	.delete('/simpleDelete')
-	.reply(200, { test: true })
-	.patch('/simplePatch')
-	.reply(200, { test: true })
-	.put('/simplePut')
-	.reply(200, { test: true })
-	.post('/simplePost')
-	.reply(200, { test: true })
-	.get('/getQuery')
-	.query({ foo: 'bar', hello: 'world' })
-	.reply(200, { test: true })
-	.get('/getAuth')
-	.times(3)
-	.reply(200, function handler() {
-		// eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-		return { auth: this.req.headers.authorization?.[0] ?? null };
+mockPool
+	.intercept({
+		path: '/getReason',
+		method: 'GET',
 	})
-	.get('/getReason')
-	.times(3)
-	.reply(200, function handler() {
-		// eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-		return { reason: this.req.headers['x-audit-log-reason']?.[0] ?? null };
+	.reply(200, ({ headers }) => ({
+		reason: headers.get('x-audit-log-reason') ?? null,
+	}))
+	.times(3);
+
+mockPool
+	.intercept({
+		path: '/urlEncoded',
+		method: 'POST',
 	})
-	.post('/urlEncoded')
-	.reply(200, (_, body) => body)
-	.post('/postEcho')
-	.reply(200, (_, body) => body)
-	.post('/postFile')
-	.times(5)
-	.reply(200, (_, body) => ({
-		// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+	.reply(200, ({ body }) => body);
+
+mockPool
+	.intercept({
+		path: '/postEcho',
+		method: 'POST',
+	})
+	.reply(200, ({ body }) => body);
+
+mockPool
+	.intercept({
+		path: '/postFile',
+		method: 'POST',
+	})
+	.reply(200, ({ body }) => ({
 		body: body
 			.replace(/\r\n/g, '\n')
 			.replace(/-+\d+-*\n?/g, '')
 			.trim(),
-	}))
-	.delete('/channels/339942739275677727/messages/392063687801700356')
-	.reply(200, { test: true })
-	.delete(`/channels/339942739275677727/messages/${newSnowflake}`)
-	.reply(200, { test: true })
-	.get('/request')
-	.times(2)
+	}));
+
+mockPool
+	.intercept({
+		path: '/channels/339942739275677727/messages/392063687801700356',
+		method: 'DELETE',
+	})
 	.reply(200, { test: true });
+
+mockPool
+	.intercept({
+		path: `/channels/339942739275677727/messages/${newSnowflake}`,
+		method: 'DELETE',
+	})
+	.reply(200, { test: true });
+
+mockPool
+	.intercept({
+		path: '/request',
+		method: 'GET',
+	})
+	.reply(200, { test: true })
+	.times(2);
+
+// nock(`${DefaultRestOptions.api}/v${DefaultRestOptions.version}`)
+// 	.get('/simpleGet')
+// 	.reply(200, { test: true })
+// 	.delete('/simpleDelete')
+// 	.reply(200, { test: true })
+// 	.patch('/simplePatch')
+// 	.reply(200, { test: true })
+// 	.put('/simplePut')
+// 	.reply(200, { test: true })
+// 	.post('/simplePost')
+// 	.reply(200, { test: true })
+// 	.get('/getQuery')
+// 	.query({ foo: 'bar', hello: 'world' })
+// 	.reply(200, { test: true })
+// 	.get('/getAuth')
+// 	.times(3)
+// 	.reply(200, function handler() {
+// 		// eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+// 		return { auth: this.req.headers.authorization?.[0] ?? null };
+// 	})
+// 	.get('/getReason')
+// 	.times(3)
+// 	.reply(200, function handler() {
+// 		// eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+// 		return { reason: this.req.headers['x-audit-log-reason']?.[0] ?? null };
+// 	})
+// 	.post('/urlEncoded')
+// 	.reply(200, (_, body) => body)
+// 	.post('/postEcho')
+// 	.reply(200, (_, body) => body)
+// 	.post('/postFile')
+// 	.times(5)
+// 	.reply(200, (_, body) => ({
+// 		// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+// 		body: body
+// 			.replace(/\r\n/g, '\n')
+// 			.replace(/-+\d+-*\n?/g, '')
+// 			.trim(),
+// 	}))
+// 	.delete('/channels/339942739275677727/messages/392063687801700356')
+// 	.reply(200, { test: true })
+// 	.delete(`/channels/339942739275677727/messages/${newSnowflake}`)
+// 	.reply(200, { test: true })
+// 	.get('/request')
+// 	.times(2)
+// 	.reply(200, { test: true });
 
 test('simple GET', async () => {
 	expect(await api.get('/simpleGet')).toStrictEqual({ test: true });
