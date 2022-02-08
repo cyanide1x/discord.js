@@ -1,4 +1,4 @@
-import nock from 'nock';
+import { MockAgent, setGlobalDispatcher } from 'undici';
 import { DefaultRestOptions, DiscordAPIError, HTTPError, RateLimitError, REST, RESTEvents } from '../src';
 
 const api = new REST({ timeout: 2000, offset: 5 }).setToken('A-Very-Fake-Token');
@@ -40,184 +40,445 @@ function startSublimitIntervals() {
 	}
 }
 
-nock(`${DefaultRestOptions.api}/v${DefaultRestOptions.version}`)
-	.persist()
-	.replyDate()
-	.get('/standard')
-	.times(3)
-	.reply((): nock.ReplyFnResult => {
+const mockClient = new MockAgent({ connections: 1 });
+setGlobalDispatcher(mockClient);
+const mockPool = mockClient.get(`${DefaultRestOptions.api}/v${DefaultRestOptions.version}`);
+
+mockPool
+	.intercept({
+		path: '/standard',
+		method: 'GET',
+	})
+	.reply(() => {
 		const response = Date.now() >= resetAfter ? 204 : 429;
 		resetAfter = Date.now() + 250;
 		if (response === 204) {
-			return [
-				204,
-				undefined,
-				{
-					'x-ratelimit-limit': '1',
-					'x-ratelimit-remaining': '0',
-					'x-ratelimit-reset-after': ((resetAfter - Date.now()) / 1000).toString(),
-					'x-ratelimit-bucket': '80c17d2f203122d936070c88c8d10f33',
-					via: '1.1 google',
+			return {
+				statusCode: 204,
+				data: '',
+				responseOptions: {
+					headers: {
+						'x-ratelimit-limit': '1',
+						'x-ratelimit-remaining': '0',
+						'x-ratelimit-reset-after': ((resetAfter - Date.now()) / 1000).toString(),
+						'x-ratelimit-bucket': '80c17d2f203122d936070c88c8d10f33',
+						via: '1.1 google',
+					},
 				},
-			];
+			};
 		}
-		return [
-			429,
-			{
+		return {
+			statusCode: 429,
+			data: {
 				limit: '1',
 				remaining: '0',
 				resetAfter: (resetAfter / 1000).toString(),
 				bucket: '80c17d2f203122d936070c88c8d10f33',
 				retryAfter: (resetAfter - Date.now()).toString(),
 			},
-			{
-				'x-ratelimit-limit': '1',
-				'x-ratelimit-remaining': '0',
-				'x-ratelimit-reset-after': ((resetAfter - Date.now()) / 1000).toString(),
-				'x-ratelimit-bucket': '80c17d2f203122d936070c88c8d10f33',
-				'retry-after': (resetAfter - Date.now()).toString(),
-				via: '1.1 google',
+			responseOptions: {
+				headers: {
+					'x-ratelimit-limit': '1',
+					'x-ratelimit-remaining': '0',
+					'x-ratelimit-reset-after': ((resetAfter - Date.now()) / 1000).toString(),
+					'x-ratelimit-bucket': '80c17d2f203122d936070c88c8d10f33',
+					'retry-after': (resetAfter - Date.now()).toString(),
+					via: '1.1 google',
+				},
 			},
-		];
+		};
 	})
-	.get('/triggerGlobal')
-	.reply(
-		(): nock.ReplyFnResult => [
-			204,
-			{ global: true },
-			{
+	.persist()
+	.times(3);
+
+mockPool
+	.intercept({
+		path: '/triggerGlobal',
+		method: 'GET',
+	})
+	.reply(() => ({
+		statusCode: 204,
+		data: { global: true },
+		responseOptions: {
+			headers: {
 				'x-ratelimit-global': 'true',
 				'retry-after': '1',
 				via: '1.1 google',
 			},
-		],
-	)
-	.get('/regularRequest')
-	.reply(204, { test: true })
-	.patch('/channels/:id', (body) => ['name', 'topic'].some((key) => Reflect.has(body as Record<string, unknown>, key)))
-	.reply((): nock.ReplyFnResult => {
+		},
+	}));
+
+mockPool
+	.intercept({
+		path: '/regularRequest',
+		method: 'GET',
+	})
+	.reply(204, { test: true });
+
+mockPool
+	.intercept({
+		path: '/channels/:id',
+		method: 'PATCH',
+		body: (body) => ['name', 'topic'].some((key) => Reflect.has(JSON.parse(body) as Record<string, unknown>, key)),
+	})
+	.reply(() => {
 		sublimitHits += 1;
 		sublimitRequests += 1;
 		const response = 2 - sublimitHits >= 0 && 10 - sublimitRequests >= 0 ? 204 : 429;
 		startSublimitIntervals();
 		if (response === 204) {
-			return [
-				204,
-				undefined,
-				{
-					'x-ratelimit-limit': '10',
-					'x-ratelimit-remaining': `${10 - sublimitRequests}`,
-					'x-ratelimit-reset-after': ((sublimitResetAfter - Date.now()) / 1000).toString(),
-					via: '1.1 google',
+			return {
+				statusCode: 204,
+				data: '',
+				responseOptions: {
+					headers: {
+						'x-ratelimit-limit': '10',
+						'x-ratelimit-remaining': `${10 - sublimitRequests}`,
+						'x-ratelimit-reset-after': ((sublimitResetAfter - Date.now()) / 1000).toString(),
+						via: '1.1 google',
+					},
 				},
-			];
+			};
 		}
-		return [
-			429,
-			{
+		return {
+			statusCode: 429,
+			data: {
 				limit: '10',
 				remaining: `${10 - sublimitRequests}`,
 				resetAfter: (sublimitResetAfter / 1000).toString(),
 				retryAfter: ((retryAfter - Date.now()) / 1000).toString(),
 			},
-			{
-				'x-ratelimit-limit': '10',
-				'x-ratelimit-remaining': `${10 - sublimitRequests}`,
-				'x-ratelimit-reset-after': ((sublimitResetAfter - Date.now()) / 1000).toString(),
-				'retry-after': ((retryAfter - Date.now()) / 1000).toString(),
-				via: '1.1 google',
+			responseOptions: {
+				headers: {
+					'x-ratelimit-limit': '10',
+					'x-ratelimit-remaining': `${10 - sublimitRequests}`,
+					'x-ratelimit-reset-after': ((sublimitResetAfter - Date.now()) / 1000).toString(),
+					'retry-after': ((retryAfter - Date.now()) / 1000).toString(),
+					via: '1.1 google',
+				},
 			},
-		];
+		};
+	});
+
+mockPool
+	.intercept({
+		path: '/channels/:id',
+		method: 'PATCH',
+		body: (body) => ['name', 'topic'].every((key) => Reflect.has(JSON.parse(body) as Record<string, unknown>, key)),
 	})
-	.patch('/channels/:id', (body) =>
-		['name', 'topic'].every((key) => !Reflect.has(body as Record<string, unknown>, key)),
-	)
-	.reply((): nock.ReplyFnResult => {
+	.reply(() => {
 		sublimitRequests += 1;
 		const response = 10 - sublimitRequests >= 0 ? 204 : 429;
 		startSublimitIntervals();
 		if (response === 204) {
-			return [
-				204,
-				undefined,
-				{
-					'x-ratelimit-limit': '10',
-					'x-ratelimit-remaining': `${10 - sublimitRequests}`,
-					'x-ratelimit-reset-after': ((sublimitResetAfter - Date.now()) / 1000).toString(),
-					via: '1.1 google',
+			return {
+				statusCode: 204,
+				data: '',
+				responseOptions: {
+					headers: {
+						'x-ratelimit-limit': '10',
+						'x-ratelimit-remaining': `${10 - sublimitRequests}`,
+						'x-ratelimit-reset-after': ((sublimitResetAfter - Date.now()) / 1000).toString(),
+						via: '1.1 google',
+					},
 				},
-			];
+			};
 		}
-		return [
-			429,
-			{
+		return {
+			statusCode: 429,
+			data: {
 				limit: '10',
 				remaining: `${10 - sublimitRequests}`,
 				resetAfter: (sublimitResetAfter / 1000).toString(),
 				retryAfter: ((sublimitResetAfter - Date.now()) / 1000).toString(),
 			},
-			{
-				'x-ratelimit-limit': '10',
-				'x-ratelimit-remaining': `${10 - sublimitRequests}`,
-				'x-ratelimit-reset-after': ((sublimitResetAfter - Date.now()) / 1000).toString(),
-				'retry-after': ((sublimitResetAfter - Date.now()) / 1000).toString(),
-				via: '1.1 google',
-			},
-		];
-	})
-	.get('/unexpected')
-	.times(3)
-	.reply((): nock.ReplyFnResult => {
-		if (unexpected429) {
-			unexpected429 = false;
-			return [
-				429,
-				undefined,
-				{
-					'retry-after': '1',
+			responseOptions: {
+				headers: {
+					'x-ratelimit-limit': '10',
+					'x-ratelimit-remaining': `${10 - sublimitRequests}`,
+					'x-ratelimit-reset-after': ((sublimitResetAfter - Date.now()) / 1000).toString(),
+					'retry-after': ((sublimitResetAfter - Date.now()) / 1000).toString(),
 					via: '1.1 google',
 				},
-			];
-		}
-		return [204, { test: true }];
+			},
+		};
+	});
+
+mockPool
+	.intercept({
+		path: '/unexpected',
+		method: 'GET',
 	})
-	.get('/unexpected-cf')
-	.times(2)
-	.reply((): nock.ReplyFnResult => {
+	.reply(() => {
+		if (unexpected429) {
+			unexpected429 = false;
+			return {
+				statusCode: 429,
+				data: '',
+				responseOptions: {
+					headers: {
+						'retry-after': '1',
+						via: '1.1 google',
+					},
+				},
+			};
+		}
+		return { statusCode: 204, data: { test: true } };
+	})
+	.times(3);
+
+mockPool
+	.intercept({
+		path: '/unexpected-cf',
+		method: 'GET',
+	})
+	.reply(() => {
 		if (unexpected429cf) {
 			unexpected429cf = false;
-			return [
-				429,
-				undefined,
-				{
-					'retry-after': '1',
+			return {
+				statusCode: 429,
+				data: '',
+				responseOptions: {
+					headers: {
+						'retry-after': '1',
+					},
 				},
-			];
+			};
 		}
-		return [204, { test: true }];
+		return { statusCode: 204, data: { test: true } };
 	})
-	.get('/temp')
-	.times(2)
-	.reply((): nock.ReplyFnResult => {
+	.times(2);
+
+mockPool
+	.intercept({
+		path: '/temp',
+		method: 'GET',
+	})
+	.reply(() => {
 		if (serverOutage) {
 			serverOutage = false;
-			return [500];
+			return { statusCode: 500, data: '' };
 		}
-		return [204, { test: true }];
+		return { statusCode: 204, data: { test: true } };
 	})
-	.get('/outage')
+	.times(2);
+
+mockPool
+	.intercept({
+		path: '/outage',
+		method: 'GET',
+	})
+	.reply(500, {})
+	.times(2);
+
+mockPool
+	.intercept({
+		path: '/slow',
+		method: 'GET',
+	})
+	.reply(200, '')
 	.times(2)
-	.reply(500)
-	.get('/slow')
-	.times(2)
-	.delay(3000)
-	.reply(200)
-	.get('/badRequest')
-	.reply(403, { message: 'Missing Permissions', code: 50013 })
-	.get('/unauthorized')
-	.reply(401, { message: '401: Unauthorized', code: 0 })
-	.get('/malformedRequest')
-	.reply(601);
+	.delay(3000);
+
+mockPool
+	.intercept({
+		path: '/badRequest',
+		method: 'GET',
+	})
+	.reply(403, { message: 'Missing Permissions', code: 50013 });
+
+mockPool
+	.intercept({
+		path: '/unauthorized',
+		method: 'GET',
+	})
+	.reply(401, { message: '401: Unauthorized', code: 0 });
+
+mockPool
+	.intercept({
+		path: '/malformedRequest',
+		method: 'GET',
+	})
+	.reply(601, '');
+
+// nock(`${DefaultRestOptions.api}/v${DefaultRestOptions.version}`)
+// 	.persist()
+// 	.replyDate()
+// 	.get('/standard')
+// 	.times(3)
+// 	.reply((): nock.ReplyFnResult => {
+// 		const response = Date.now() >= resetAfter ? 204 : 429;
+// 		resetAfter = Date.now() + 250;
+// 		if (response === 204) {
+// 			return [
+// 				204,
+// 				undefined,
+// 				{
+// 					'x-ratelimit-limit': '1',
+// 					'x-ratelimit-remaining': '0',
+// 					'x-ratelimit-reset-after': ((resetAfter - Date.now()) / 1000).toString(),
+// 					'x-ratelimit-bucket': '80c17d2f203122d936070c88c8d10f33',
+// 					via: '1.1 google',
+// 				},
+// 			];
+// 		}
+// 		return [
+// 			429,
+// 			{
+// 				limit: '1',
+// 				remaining: '0',
+// 				resetAfter: (resetAfter / 1000).toString(),
+// 				bucket: '80c17d2f203122d936070c88c8d10f33',
+// 				retryAfter: (resetAfter - Date.now()).toString(),
+// 			},
+// 			{
+// 				'x-ratelimit-limit': '1',
+// 				'x-ratelimit-remaining': '0',
+// 				'x-ratelimit-reset-after': ((resetAfter - Date.now()) / 1000).toString(),
+// 				'x-ratelimit-bucket': '80c17d2f203122d936070c88c8d10f33',
+// 				'retry-after': (resetAfter - Date.now()).toString(),
+// 				via: '1.1 google',
+// 			},
+// 		];
+// 	})
+// 	.get('/triggerGlobal')
+// 	.reply(
+// 		(): nock.ReplyFnResult => [
+// 			204,
+// 			{ global: true },
+// 			{
+// 				'x-ratelimit-global': 'true',
+// 				'retry-after': '1',
+// 				via: '1.1 google',
+// 			},
+// 		],
+// 	)
+// 	.get('/regularRequest')
+// 	.reply(204, { test: true })
+// 	.patch('/channels/:id', (body) => ['name', 'topic'].some((key) => Reflect.has(body as Record<string, unknown>, key)))
+// 	.reply((): nock.ReplyFnResult => {
+// 		sublimitHits += 1;
+// 		sublimitRequests += 1;
+// 		const response = 2 - sublimitHits >= 0 && 10 - sublimitRequests >= 0 ? 204 : 429;
+// 		startSublimitIntervals();
+// 		if (response === 204) {
+// 			return [
+// 				204,
+// 				undefined,
+// 				{
+// 					'x-ratelimit-limit': '10',
+// 					'x-ratelimit-remaining': `${10 - sublimitRequests}`,
+// 					'x-ratelimit-reset-after': ((sublimitResetAfter - Date.now()) / 1000).toString(),
+// 					via: '1.1 google',
+// 				},
+// 			];
+// 		}
+// 		return [
+// 			429,
+// 			{
+// 				limit: '10',
+// 				remaining: `${10 - sublimitRequests}`,
+// 				resetAfter: (sublimitResetAfter / 1000).toString(),
+// 				retryAfter: ((retryAfter - Date.now()) / 1000).toString(),
+// 			},
+// 			{
+// 				'x-ratelimit-limit': '10',
+// 				'x-ratelimit-remaining': `${10 - sublimitRequests}`,
+// 				'x-ratelimit-reset-after': ((sublimitResetAfter - Date.now()) / 1000).toString(),
+// 				'retry-after': ((retryAfter - Date.now()) / 1000).toString(),
+// 				via: '1.1 google',
+// 			},
+// 		];
+// 	})
+// 	.patch('/channels/:id', (body) =>
+// 		['name', 'topic'].every((key) => !Reflect.has(body as Record<string, unknown>, key)),
+// 	)
+// 	.reply((): nock.ReplyFnResult => {
+// 		sublimitRequests += 1;
+// 		const response = 10 - sublimitRequests >= 0 ? 204 : 429;
+// 		startSublimitIntervals();
+// 		if (response === 204) {
+// 			return [
+// 				204,
+// 				undefined,
+// 				{
+// 					'x-ratelimit-limit': '10',
+// 					'x-ratelimit-remaining': `${10 - sublimitRequests}`,
+// 					'x-ratelimit-reset-after': ((sublimitResetAfter - Date.now()) / 1000).toString(),
+// 					via: '1.1 google',
+// 				},
+// 			];
+// 		}
+// 		return [
+// 			429,
+// 			{
+// 				limit: '10',
+// 				remaining: `${10 - sublimitRequests}`,
+// 				resetAfter: (sublimitResetAfter / 1000).toString(),
+// 				retryAfter: ((sublimitResetAfter - Date.now()) / 1000).toString(),
+// 			},
+// 			{
+// 				'x-ratelimit-limit': '10',
+// 				'x-ratelimit-remaining': `${10 - sublimitRequests}`,
+// 				'x-ratelimit-reset-after': ((sublimitResetAfter - Date.now()) / 1000).toString(),
+// 				'retry-after': ((sublimitResetAfter - Date.now()) / 1000).toString(),
+// 				via: '1.1 google',
+// 			},
+// 		];
+// 	})
+// 	.get('/unexpected')
+// 	.times(3)
+// 	.reply((): nock.ReplyFnResult => {
+// 		if (unexpected429) {
+// 			unexpected429 = false;
+// 			return [
+// 				429,
+// 				undefined,
+// 				{
+// 					'retry-after': '1',
+// 					via: '1.1 google',
+// 				},
+// 			];
+// 		}
+// 		return [204, { test: true }];
+// 	})
+// 	.get('/unexpected-cf')
+// 	.times(2)
+// 	.reply((): nock.ReplyFnResult => {
+// 		if (unexpected429cf) {
+// 			unexpected429cf = false;
+// 			return [
+// 				429,
+// 				undefined,
+// 				{
+// 					'retry-after': '1',
+// 				},
+// 			];
+// 		}
+// 		return [204, { test: true }];
+// 	})
+// 	.get('/temp')
+// 	.times(2)
+// 	.reply((): nock.ReplyFnResult => {
+// 		if (serverOutage) {
+// 			serverOutage = false;
+// 			return [500];
+// 		}
+// 		return [204, { test: true }];
+// 	})
+// 	.get('/outage')
+// 	.times(2)
+// 	.reply(500)
+// 	.get('/slow')
+// 	.times(2)
+// 	.delay(3000)
+// 	.reply(200)
+// 	.get('/badRequest')
+// 	.reply(403, { message: 'Missing Permissions', code: 50013 })
+// 	.get('/unauthorized')
+// 	.reply(401, { message: '401: Unauthorized', code: 0 })
+// 	.get('/malformedRequest')
+// 	.reply(601);
 
 // This is tested first to ensure the count remains accurate
 test('Significant Invalid Requests', async () => {

@@ -1,9 +1,18 @@
-import nock from 'nock';
+import { MockAgent, setGlobalDispatcher } from 'undici';
 import { DefaultRestOptions, REST } from '../src';
 
 const api = new REST();
 
-nock(`${DefaultRestOptions.api}/v${DefaultRestOptions.version}`).get('/simpleGet').reply(200, { test: true });
+const mockClient = new MockAgent({ connections: 1 });
+setGlobalDispatcher(mockClient);
+const mockPool = mockClient.get(`${DefaultRestOptions.api}/v${DefaultRestOptions.version}`);
+
+mockPool
+	.intercept({
+		path: '/simpleGet',
+		method: 'GET',
+	})
+	.reply(200, { test: true });
 
 test('no token', async () => {
 	const promise = api.get('/simpleGet');

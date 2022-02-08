@@ -10390,12 +10390,11 @@ __metadata:
   languageName: node
   linkType: hard
 
-"undici@https://github.com/suneettipirneni/undici":
-  version: 4.13.0
-  resolution: "undici@https://github.com/suneettipirneni/undici.git#commit=4c206cb754939ced3e7f76955b85d67d799e058e"
-  checksum: 3f6222a000ff337e1b929950c8205e02523cd71767a5790a1366b76b3204bd66556ab5cfb8b0eacfa0b842a80023fdfa3508a66246b711b6a51376747af99149
+"undici@portal:/Users/suneettipirneni/undici::locator=%40discordjs%2Fdiscord.js%40workspace%3A.":
+  version: 0.0.0-use.local
+  resolution: "undici@portal:/Users/suneettipirneni/undici::locator=%40discordjs%2Fdiscord.js%40workspace%3A."
   languageName: node
-  linkType: hard
+  linkType: soft
 
 "unicode-canonical-property-names-ecmascript@npm:^2.0.0":
   version: 2.0.0
