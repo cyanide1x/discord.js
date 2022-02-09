@@ -9,7 +9,7 @@
 		"lint": "turbo run lint",
 		"format": "turbo run format",
 		"fmt": "turbo run format",
-		"postinstall": "is-ci || husky install",
+		"postinstall": "is-ci || cd /workspace/discordjs-modalbot && husky install",
 		"docs": "turbo run docs",
 		"changelog": "turbo run changelog",
 		"update": "yarn upgrade-interactive"
