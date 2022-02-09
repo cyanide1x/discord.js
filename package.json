@@ -9,7 +9,6 @@
 		"lint": "turbo run lint",
 		"format": "turbo run format",
 		"fmt": "turbo run format",
-		"postinstall": "is-ci || husky install",
 		"docs": "turbo run docs",
 		"changelog": "turbo run changelog",
 		"update": "yarn upgrade-interactive --latest"
