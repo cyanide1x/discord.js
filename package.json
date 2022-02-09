@@ -8,6 +8,7 @@
 		"test": "turbo run test",
 		"lint": "turbo run lint",
 		"format": "turbo run format",
+		"postinstall": "is-ci || husky install",
 		"fmt": "turbo run format",
 		"docs": "turbo run docs",
 		"changelog": "turbo run changelog",
